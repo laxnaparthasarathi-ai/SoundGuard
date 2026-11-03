@@ -1,0 +1,261 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundGuard | Model Evaluation</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            color: #182238;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 24px 8%;
+        }
+
+        header h1 { margin: 0 0 8px; }
+        header p { margin: 0; color: #cbd5e1; }
+
+        nav {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        nav a {
+            color: white;
+            padding: 10px 16px;
+            border: 1px solid #94a3b8;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+        nav a:hover { background: #263b70; }
+
+        main {
+            max-width: 1000px;
+            margin: 32px auto;
+            padding: 0 18px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            margin-bottom: 22px;
+            border-radius: 14px;
+            box-shadow: 0 5px 20px #17255410;
+        }
+
+        .muted { color: #64748b; }
+
+        .accuracy {
+            font-size: 42px;
+            font-weight: bold;
+            color: #047857;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+        }
+
+        .stat {
+            background: #f8fafc;
+            padding: 18px;
+            border-radius: 10px;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+
+        .table-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        .matrix th, .matrix td { text-align: center; }
+
+        .matrix td {
+            background: #eff6ff;
+            font-weight: bold;
+        }
+
+        .matrix th {
+            background: #172554;
+            color: white;
+        }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>📊 SoundGuard Evaluation</h1>
+    <p>Model performance and classification metrics</p>
+
+    <nav>
+        <a href="/">🏠 Dashboard</a>
+        <a href="/evaluation">📊 Model Evaluation</a>
+    </nav>
+</header>
+
+<main>
+
+    <section class="card">
+        <h2>Overall Test Accuracy</h2>
+
+        <div class="accuracy">{{ accuracy }}%</div>
+
+        <p class="muted">
+            Evaluation on held-out test samples.
+        </p>
+
+        <div class="stats">
+            <div class="stat">
+                <strong>{{ train_samples }}</strong>
+                <span>Training Samples</span>
+            </div>
+
+            <div class="stat">
+                <strong>{{ test_samples }}</strong>
+                <span>Testing Samples</span>
+            </div>
+
+            <div class="stat">
+                <strong>{{ classes|length }}</strong>
+                <span>Sound Categories</span>
+            </div>
+        </div>
+
+        <p class="muted">
+            The current accuracy is based on a small test set and
+            should not be interpreted as guaranteed real-world performance.
+        </p>
+    </section>
+
+    <section class="card">
+        <h2>Class-wise Performance</h2>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>F1-score</th>
+                        <th>Support</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in metrics %}
+                    <tr>
+                        <td>{{ item.label }}</td>
+                        <td>{{ item.precision }}%</td>
+                        <td>{{ item.recall }}%</td>
+                        <td>{{ item.f1 }}%</td>
+                        <td>{{ item.support }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Confusion Matrix</h2>
+
+        <p class="muted">
+            Rows represent actual categories. Columns represent
+            predicted categories.
+        </p>
+
+        <p><strong>Category order:</strong> {{ classes|join(", ") }}</p>
+
+        <div class="table-wrap">
+            <table class="matrix">
+                <thead>
+                    <tr>
+                        <th>Actual / Predicted</th>
+                        {% for label in classes %}
+                        <th>{{ label }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for row in matrix %}
+                    <tr>
+                        <th>{{ classes[loop.index0] }}</th>
+
+                        {% for value in row %}
+                        <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>About the Model</h2>
+
+        <p>
+            SoundGuard currently uses a Decision Tree machine-learning
+            classifier trained on numerical audio features.
+        </p>
+
+        <p>
+            The dataset contains five ESC-50 sound categories:
+            dog, engine, glass breaking, rain, and siren.
+        </p>
+
+        <p>
+            This is a baseline machine-learning implementation,
+            not a deep-learning model. Further evaluation on a larger,
+            independent dataset is required before real-world use.
+        </p>
+
+        <p>
+            <a href="/">← Return to Dashboard</a>
+        </p>
+    </section>
+
+</main>
+
+<footer>
+    SoundGuard Mini Project · Model Evaluation
+</footer>
+
+</body>
+</html>

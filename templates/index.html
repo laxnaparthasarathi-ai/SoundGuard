@@ -1,0 +1,274 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundGuard | Dashboard</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            color: #182238;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 24px 8%;
+        }
+
+        header h1 { margin: 0 0 8px; }
+        header p { margin: 0; color: #cbd5e1; }
+
+        nav {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        nav a {
+            color: white;
+            padding: 10px 16px;
+            border: 1px solid #94a3b8;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+        nav a:hover { background: #263b70; }
+
+        main {
+            max-width: 950px;
+            margin: 32px auto;
+            padding: 0 18px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            margin-bottom: 22px;
+            border-radius: 14px;
+            box-shadow: 0 5px 20px #17255410;
+        }
+
+        h2 { margin-top: 0; }
+
+        .upload-area {
+            border: 2px dashed #94a3b8;
+            border-radius: 12px;
+            padding: 28px 16px;
+            text-align: center;
+        }
+
+        input[type=file] {
+            display: block;
+            margin: 18px auto;
+            max-width: 100%;
+        }
+
+        button {
+            border: 0;
+            border-radius: 8px;
+            padding: 12px 20px;
+            background: #2563eb;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        button:hover { background: #1d4ed8; }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 5px solid #dc2626;
+        }
+
+        .result {
+            background: #ecfdf5;
+            border-left: 5px solid #059669;
+        }
+
+        .prediction {
+            font-size: 28px;
+            font-weight: bold;
+            color: #047857;
+        }
+
+        .muted { color: #64748b; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+        }
+
+        .stat {
+            background: #f8fafc;
+            padding: 18px;
+            border-radius: 10px;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 23px;
+            margin-bottom: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        .table-wrap { overflow-x: auto; }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🔊 SoundGuard</h1>
+    <p>Environmental Sound Classification Dashboard</p>
+
+    <nav>
+        <a href="/">🏠 Dashboard</a>
+        <a href="/evaluation">📊 Model Evaluation</a>
+    </nav>
+</header>
+
+<main>
+
+    <section class="card">
+        <h2>Welcome to SoundGuard</h2>
+        <p class="muted">
+            Upload a WAV recording to classify it as dog, engine,
+            glass breaking, rain, or siren.
+        </p>
+
+        <div class="stats">
+            <div class="stat">
+                <strong>5</strong>
+                <span>Sound Categories</span>
+            </div>
+
+            <div class="stat">
+                <strong>200</strong>
+                <span>Training Dataset Recordings</span>
+            </div>
+
+            <div class="stat">
+                <strong>78%</strong>
+                <span>Test Accuracy</span>
+            </div>
+        </div>
+
+        <p class="muted">
+            Accuracy is based on the current held-out test set.
+            Real-world performance may differ.
+        </p>
+    </section>
+
+    <section class="card">
+        <h2>Analyze an Audio File</h2>
+
+        <form action="/predict" method="post"
+              enctype="multipart/form-data">
+
+            <div class="upload-area">
+                <label for="audio">Choose an audio file (WAV)</label>
+
+                <input
+                    id="audio"
+                    type="file"
+                    name="audio"
+                    accept=".wav,audio/wav"
+                    required
+                >
+
+                <button type="submit">Analyze Sound</button>
+            </div>
+        </form>
+    </section>
+
+    {% if error %}
+    <section class="card error">
+        <h2>Unable to Analyze</h2>
+        <p>{{ error }}</p>
+    </section>
+    {% endif %}
+
+    {% if result %}
+    <section class="card result">
+        <h2>Prediction Result</h2>
+        <p class="muted">Detected sound category</p>
+
+        <div class="prediction">{{ result.label }}</div>
+
+        <p>
+            Model confidence:
+            <strong>{{ result.confidence }}%</strong>
+        </p>
+
+        <p class="muted">
+            Confidence is a model score, not a guarantee of correctness.
+        </p>
+    </section>
+    {% endif %}
+
+    <section class="card">
+        <h2>Prediction History</h2>
+
+        {% if history %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Prediction</th>
+                        <th>Confidence</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in history %}
+                    <tr>
+                        <td>{{ item.filename }}</td>
+                        <td>{{ item.label }}</td>
+                        <td>{{ item.confidence }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="muted">
+            No predictions yet. Upload a WAV file to begin.
+        </p>
+        {% endif %}
+    </section>
+
+</main>
+
+<footer>
+    SoundGuard Mini Project · Audio Intelligence
+</footer>
+
+</body>
+</html>
